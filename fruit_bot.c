@@ -39,9 +39,7 @@ int main(int argc, char *argv[]) {
 }
 
 void print_player_name(void) {
-    // CHANGE THIS PRINTF TO YOUR DESIRED PLAYER NAME
-    printf("Botty McBotbot");
-
+    printf("Survival of the Bots");
 }
 
 // print_move - should print a single line indicating
