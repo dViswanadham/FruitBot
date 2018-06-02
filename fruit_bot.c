@@ -2,12 +2,10 @@
 // Assignment 3, COMP1511 18s1: Fruit Bot
 //
 // Dheeraj Viswanadham (z5204820)
-// Started: 16/05/18 | Last edited: 2/06/18
+// Started: 16/05/18 | Last edited: 3/06/18
 //
 // Version 1.0.0: Assignment released.
 // Version 1.0.1: minor bug in main fixed
-// Acknowledgement: looked at some of the week 11 lab solutions at how I 
-// could've improved my previous solutions
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -416,7 +414,9 @@ void print_move(struct bot *b) {
 // the most strategic steps that the bot should take depending on it's current 
 // location within the tournament world in order to ensure that it would have
 // the maximum possible profit (given no external interference and a separate
-// strategy if I was in a multi-bot world).
+// strategy if I was in a multi-bot world). I then tested that my decisions 
+// worked by having printf debugging statements throughout my code to determine
+// which actions my bot took within the test world and the referee program.
 
 void run_unit_tests(void) {
     // PUT YOUR UNIT TESTS HERE
