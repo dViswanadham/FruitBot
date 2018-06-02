@@ -6,6 +6,8 @@
 //
 // Version 1.0.0: Assignment released.
 // Version 1.0.1: minor bug in main fixed
+// Acknowledgement: looked at some of the week 11 lab solutions at how I 
+// could've improved my previous solutions
 
 #include <stdio.h>
 #include <stdlib.h>
