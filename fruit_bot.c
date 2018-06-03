@@ -404,31 +404,6 @@ void print_move(struct bot *b) {
 	}
 }
 
-// Testing Strategy:
-//
-// My testing strategy was to utilise my knowledge of fundamental econometrics 
-// and with the help of the week 11 lab exercises, i was able to draw out a plan 
-// on how to approach the assignment. I divided my "steps" into smaller
-// functions and had various "forks" and decisions that my bot would take
-// depending on the size and environment of the world, which I tested by using 
-// the provided referee and making my own worlds of different sizes and types of
-// locations to ensure my bot could adapt to any simulation that it could 
-// encounter in the actual tournament. I first got all my buyer and seller 
-// locations of the fruit I wanted to sell (and double-checked that there was 
-// in fact a profitable location that I could sell them to). I then determined 
-// the most strategic steps that the bot should take depending on it's current 
-// location within the tournament world in order to ensure that it would have
-// the maximum possible profit (given no external interference and a separate
-// strategy if I was in a multi-bot world). I then tested that my decisions 
-// worked by having printf debugging statements throughout my code to determine
-// which actions my bot took within the test world and the referee program.
-
-void run_unit_tests(void) {
-	// PUT YOUR UNIT TESTS HERE
-	// This is a difficult assignment to write unit tests for,
-	// but make sure you describe your testing strategy above.
-}
-
 // OWN FUNCTIONS START HERE:
 
 // Determines whether a fruit is within the buyer array
@@ -736,4 +711,32 @@ int move_charge(struct bot *b, struct location *location) {
 double current_battery_quota(struct bot *b) {
 	
 	return (((b->battery_level * 1.0) / b->battery_capacity) * MAX);
+}
+
+// Testing Strategy:
+//
+// My testing strategy was to utilise my knowledge of fundamental econometrics 
+// and with the help of the week 11 lab exercises, i was able to draw out a plan 
+// on how to approach the assignment. I divided my "steps" into smaller
+// functions and had various "forks" and decisions that my bot would take
+// depending on the size and environment of the world, which I tested by using 
+// the provided referee and making my own worlds of different sizes and types of
+// locations to ensure my bot could adapt to any simulation that it could 
+// encounter in the actual tournament. I first got all my buyer and seller 
+// locations of the fruit I wanted to sell (and double-checked that there was 
+// in fact a profitable location that I could sell them to). I then determined 
+// the most strategic steps that the bot should take depending on it's current 
+// location within the tournament world in order to ensure that it would have
+// the maximum possible profit (given no external interference and a separate
+// strategy if I was in a multi-bot world). I then tested that my decisions 
+// worked by having printf debugging statements throughout my code to determine
+// which actions my bot took within the test world and the referee program.
+
+void run_unit_tests(void) {
+	// PUT YOUR UNIT TESTS HERE
+	// This is a difficult assignment to write unit tests for,
+	// but make sure you describe your testing strategy above.
+	// 
+	// As my functions took in structs it was hard to write up optimal code to 
+	// test them so I have explained my overall testing strategy above.
 }
