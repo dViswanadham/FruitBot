@@ -6,6 +6,10 @@
 //
 // Version 1.0.0: Assignment released.
 // Version 1.0.1: minor bug in main fixed
+// 
+// Acknowledgment: Some of the code was edited after looking at the week 11
+// lab exercises so as to improve the overall readability of my code and they 
+// were much more simpler to implement than my previous solutions.
 
 #include <stdio.h>
 #include <stdlib.h>
