@@ -363,7 +363,7 @@ void print_move(struct bot *b) {
 			}
 			
 			if (minimum_displacement(b->location, elec_depot[var_a]) 
-				<= nearest_depot_displacement) {
+			    <= nearest_depot_displacement) {
 				
 				nearest_depot_displacement = minimum_displacement(b->location, 
 				elec_depot[var_a]);
