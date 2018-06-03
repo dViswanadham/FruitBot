@@ -28,19 +28,20 @@
 #define LEAST 3
 
 // Decisions
-#define MOVE_TO_BUYER 1
-#define BUYING 2
-#define MOVE_TO_SELLER 3
-#define SELLING 4
-#define MOVE_TO_ELECTRICITY 5
+#define TRAVERSE_PURCHASER 1
+#define PURCHASE 2
+#define TRAVERSE_RETAILER 3
+#define UNLOAD 4
+#define TRAVERSE_CHARGE 5
 #define RECHARGING 6
-#define SELL_TO_BIN 7
-#define GO_TO_BIN 8
-#define DO_NOT_BUY 9
+#define UNLOAD_AT_DUMP 7
+#define TRAVERSE_DUMP 8
+#define ABJURE_PURCHASE 9
 
 // Other
 #define DISTANCE 100000
 #define COST 100000
+#define QUARTER 25.0
 
 void print_player_name(void);
 void print_move(struct bot *b);
@@ -130,8 +131,8 @@ void print_move(struct bot *b) {
 		}
 	}
 	
-	struct location *prime_retailer = NULL;
-	struct location *prime_purchaser = NULL;
+	struct location *prime_retailer = NULL; // Selling fruits
+	struct location *prime_purchaser = NULL; // Buying fruits
 	int var_x = 0;
 	int economic_choice = 0;
 	
@@ -197,9 +198,8 @@ void print_move(struct bot *b) {
 	
 	// Check the distance to nearest electricity and move there (within the same 
 	// turn if possible)
-	
 	if (decision_lvl != -1) {
-		if (current_battery_quota(b) < 25.0) { 
+		if (current_battery_quota(b) < QUARTER) { 
 			// Should recharge if less than a quarter of electricity is left
 			if (strcmp("Electricity", b->location->fruit) == 0 
 			    && b->location->quantity > 0) {
@@ -208,24 +208,24 @@ void print_move(struct bot *b) {
 				
 			} else {
 				
-				decision_lvl = MOVE_TO_ELECTRICITY;
+				decision_lvl = TRAVERSE_CHARGE;
 			}
 			
 		// Sell the fruit we have on board to the strategically best buyer
 		} else if (b->fruit != NULL && strcmp(prime_purchaser->name, 
 		    b->location->name) == 0) {
 			
-			decision_lvl = SELLING;
+			decision_lvl = UNLOAD;
 		
 		// There is fruit however, we aren't near the strategically best buyer
 		} else if (b->fruit != NULL) {
 			if (can_reach_location_with_top_up(b, prime_purchaser)) {
 				
-				decision_lvl = MOVE_TO_BUYER;
+				decision_lvl = TRAVERSE_PURCHASER;
 				
 			} else {
 				
-				decision_lvl = MOVE_TO_ELECTRICITY;
+				decision_lvl = TRAVERSE_CHARGE;
 			}
 		
 		// There is no fruit on board and we aren't near the strategically 
@@ -234,11 +234,11 @@ void print_move(struct bot *b) {
 		    b->location->name) != 0) {
 			if (can_reach_location_with_top_up(b, prime_retailer)) {
 				
-				decision_lvl = MOVE_TO_SELLER;
+				decision_lvl = TRAVERSE_RETAILER;
 			
 			} else {
 				
-				decision_lvl = MOVE_TO_ELECTRICITY;
+				decision_lvl = TRAVERSE_CHARGE;
 			}
 		
 		// There is no fruit on board and we are near the strategically 
@@ -246,11 +246,11 @@ void print_move(struct bot *b) {
 		} else if (b->fruit == NULL && strcmp(prime_retailer->name, 
 		    b->location->name) == 0 && !deny_purchase) {
 			
-			decision_lvl = BUYING;
+			decision_lvl = PURCHASE;
 		
 		} else if (deny_purchase) {
 			
-			decision_lvl = DO_NOT_BUY;
+			decision_lvl = ABJURE_PURCHASE;
 		}
 	
 	} else {
@@ -258,14 +258,14 @@ void print_move(struct bot *b) {
 		// the buyer of "anything" so sell at "anything"
 		if (b->fruit != NULL && strcmp("Anything", b->location->fruit) == 0) {
 			
-			decision_lvl = SELL_TO_BIN;
+			decision_lvl = UNLOAD_AT_DUMP;
 		
 		// We have fruit, but no strategically best buyer however we are NEAR 
 		// the buyer of "anything" so go to "anything"
 		} else if (b->fruit != NULL && strcmp("Anything", 
 		    b->location->fruit) != 0) {
 			
-			decision_lvl = GO_TO_BIN;
+			decision_lvl = TRAVERSE_DUMP;
 		
 		// We have no strategically best buyer/seller but we are AT an 
 		// electricity depot so it's best to buy some electricity
@@ -279,41 +279,41 @@ void print_move(struct bot *b) {
 		} else if (b->fruit == NULL && strcmp("Electricity", 
 		    b->location->fruit) != 0 && !battery_lvl(b)) {
 			
-			decision_lvl = MOVE_TO_ELECTRICITY;
+			decision_lvl = TRAVERSE_CHARGE;
 		
 		} else {
 			
-			decision_lvl = DO_NOT_BUY;
+			decision_lvl = ABJURE_PURCHASE;
 		}
 	}
 	
 	// We have fruit on board that we can sell
-	if (decision_lvl == MOVE_TO_BUYER) {
+	if (decision_lvl == TRAVERSE_PURCHASER) {
 		int traverse = minimum_displacement(b->location, prime_purchaser);
 		int traverse_direction = move_direction(b->location, prime_purchaser);
 		
 		printf("Move %d\n", traverse * traverse_direction);
 	
-	} else if (decision_lvl == SELLING) {
+	} else if (decision_lvl == UNLOAD) {
 		
 		printf("Sell %d\n", max_amount(prime_purchaser->quantity, b->fruit_kg));
 	
-	} else if (decision_lvl == MOVE_TO_SELLER) {
+	} else if (decision_lvl == TRAVERSE_RETAILER) {
 		int traverse = minimum_displacement(b->location, prime_retailer);
 		int traverse_direction = move_direction(b->location, prime_retailer);
 		
 		printf("Move %d\n", traverse * traverse_direction);
 	
-	} else if (decision_lvl == BUYING) {
+	} else if (decision_lvl == PURCHASE) {
 		
 		printf("Buy %d\n", max_amount(largest_amount_for_bot(b, b->location), 
 		b->maximum_fruit_kg));
 	
-	} else if (decision_lvl == SELL_TO_BIN) {
+	} else if (decision_lvl == UNLOAD_AT_DUMP) {
 		
 		printf("Sell %d\n", b->fruit_kg);
 	
-	} else if (decision_lvl == GO_TO_BIN) {
+	} else if (decision_lvl == TRAVERSE_DUMP) {
 		struct location *fruit_dump[MAX_LOCATIONS];
 		struct location *closest_fruit_dump = NULL;
 		
@@ -340,7 +340,7 @@ void print_move(struct bot *b) {
 		printf("Move %d\n", traverse * traverse_direction);
 	
 	// Go to strategically best electricity depot
-	} else if (decision_lvl == MOVE_TO_ELECTRICITY) {
+	} else if (decision_lvl == TRAVERSE_CHARGE) {
 		struct location *elec_depot[MAX_LOCATIONS];
 		struct location *profitable_depot = NULL;
 		struct location *nearest_depot = NULL;
@@ -389,7 +389,7 @@ void print_move(struct bot *b) {
 		printf("Buy %d\n", max_amount(largest_amount_for_bot(b, b->location), 
 		(b->battery_capacity - b->battery_level)));
 	
-	} else if (decision_lvl == DO_NOT_BUY) {
+	} else if (decision_lvl == ABJURE_PURCHASE) {
 		
 		printf("Move 1\n");
 	
