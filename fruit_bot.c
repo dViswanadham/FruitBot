@@ -26,12 +26,12 @@
 #define SELL 2
 #define ANY 3
 
-// Directions
+// Directions:
 #define EAST 1
 #define WEST -1
 #define LEAST 3
 
-// Decisions
+// Decisions:
 #define TRAVERSE_PURCHASER 1
 #define PURCHASE 2
 #define TRAVERSE_RETAILER 3
@@ -42,10 +42,11 @@
 #define TRAVERSE_DUMP 8
 #define ABJURE_PURCHASE 9
 
-// Other
+// Other:
 #define DISTANCE 100000
 #define COST 100000
 #define QUARTER 25.0
+#define MAX 100
 
 void print_player_name(void);
 void print_move(struct bot *b);
@@ -53,8 +54,13 @@ void run_unit_tests(void);
 
 // ADD PROTOTYPES FOR YOUR FUNCTIONS HERE
 int within(char *variable, char *variable_arr[], int array_length);
-int fruit_location(struct bot *b, char *fruit, int decision, 
-                   struct location *loc[]);
+int can_reach_location_with_top_up(struct bot *b, struct location *location);
+int max_income(struct bot *b, struct location *buyer, struct location *seller);
+int depot_price(struct bot *b, struct location *vendor);
+int max_amount(int accessible, int needed);
+int largest_amount_for_bot(struct bot *b, struct location *location);
+int free_room(struct bot *b);
+int move_charge(struct bot *b, struct location *location);
 int fruit_buyers(struct bot *b, char *fruit, struct location *loc[]);
 int fruit_sellers(struct bot *b, char *fruit, struct location *loc[]);
 int electricity_depots(struct bot *b, struct location *loc[]);
@@ -64,44 +70,39 @@ int minimum_displacement(struct location *loc_a, struct location *loc_b);
 int move_direction(struct location *loc_a, struct location *loc_b);
 int same_location(struct location *loc_a, struct location *loc_b);
 int battery_lvl(struct bot *b);
-double current_battery_quota(struct bot *b);
 int can_reach(struct bot *b, struct location *location);
 int can_reach_with_curr_battery(int curr_charge, struct location *start, 
                                 struct location *destination);
-int can_reach_location_with_top_up(struct bot *b, struct location *location);
-int max_income(struct bot *b, struct location *buyer, struct location *seller);
-int depot_price(struct bot *b, struct location *vendor);
-int max_amount(int accessible, int needed);
-int largest_amount_for_bot(struct bot *b, struct location *location);
-int free_room(struct bot *b);
-int move_charge(struct bot *b, struct location *location);
+int fruit_location(struct bot *b, char *fruit, int decision, 
+                   struct location *loc[]);
+double current_battery_quota(struct bot *b);
 
 // YOU SHOULD NOT NEED TO CHANGE THIS MAIN FUNCTION
 int main(int argc, char *argv[]) {
-
-    if (argc > 1) {
-        // supply any command-line argument to run unit tests
-        run_unit_tests();
-		
-        return 0;
-    }
-
-    struct bot *me = fruit_bot_input(stdin);
 	
-    if (me == NULL) {
+	if (argc > 1) {
+		// supply any command-line argument to run unit tests
+		run_unit_tests();
 		
-        print_player_name();
+		return 0;
+	}
+	
+	struct bot *me = fruit_bot_input(stdin);
+	
+	if (me == NULL) {
 		
-    } else {
+		print_player_name();
 		
-        print_move(me);
-    }
-
-    return 0;
+	} else {
+		
+		print_move(me);
+	}
+	
+	return 0;
 }
 
 void print_player_name(void) {
-    printf("BattleBot.Bravo");
+	printf("BattleBot.Bravo");
 }
 
 // print_move - should print a single line indicating
@@ -127,11 +128,11 @@ void print_move(struct bot *b) {
 			counter = (counter + 1);
 		}
 		
-	    current = (current->east);
+		current = (current->east);
 		
-	    if (same_location(current, b->location)) {
+		if (same_location(current, b->location)) {
 			
-	        traversed_world = TRUE;
+			traversed_world = TRUE;
 		}
 	}
 	
@@ -147,9 +148,9 @@ void print_move(struct bot *b) {
 		struct location *economic_purchaser = NULL;
 		
 		int fruit_amount_retailers = fruit_sellers(b, array_fruit[var_x], 
-		    fruit_retailers);
+		                             fruit_retailers);
 		int fruit_amount_purchasers = fruit_buyers(b, array_fruit[var_x], 
-		    fruit_purchasers);
+		                              fruit_purchasers);
 		int max_income_possible = 0;
 		int var_y = 0;
 		
@@ -157,10 +158,10 @@ void print_move(struct bot *b) {
 			int var_z = 0;
 			
 			while(var_z < fruit_amount_purchasers) {
-				if (max_income_possible < max_income(b, fruit_purchasers[var_z], 
+				if (max_income_possible < max_income(b, fruit_purchasers[var_z],
 				    fruit_retailers[var_y])) {
 					
-					max_income_possible = max_income(b, fruit_purchasers[var_z], 
+					max_income_possible = max_income(b, fruit_purchasers[var_z],
 					fruit_retailers[var_y]);
 					economic_retailer = fruit_retailers[var_y];
 					economic_purchaser = fruit_purchasers[var_z];
@@ -217,7 +218,7 @@ void print_move(struct bot *b) {
 			
 		// Sell the fruit we have on board to the strategically best buyer
 		} else if (b->fruit != NULL && strcmp(prime_purchaser->name, 
-		    b->location->name) == 0) {
+		           b->location->name) == 0) {
 			
 			decision_lvl = UNLOAD;
 		
@@ -235,7 +236,7 @@ void print_move(struct bot *b) {
 		// There is no fruit on board and we aren't near the strategically 
 		// best seller
 		} else if (b->fruit == NULL && strcmp(prime_retailer->name, 
-		    b->location->name) != 0) {
+		           b->location->name) != 0) {
 			if (can_reach_location_with_top_up(b, prime_retailer)) {
 				
 				decision_lvl = TRAVERSE_RETAILER;
@@ -248,7 +249,7 @@ void print_move(struct bot *b) {
 		// There is no fruit on board and we are near the strategically 
 		// best seller
 		} else if (b->fruit == NULL && strcmp(prime_retailer->name, 
-		    b->location->name) == 0 && !deny_purchase) {
+		           b->location->name) == 0 && !deny_purchase) {
 			
 			decision_lvl = PURCHASE;
 		
@@ -267,21 +268,21 @@ void print_move(struct bot *b) {
 		// We have fruit, but no strategically best buyer however we are NEAR 
 		// the buyer of "anything" so go to "anything"
 		} else if (b->fruit != NULL && strcmp("Anything", 
-		    b->location->fruit) != 0) {
+		           b->location->fruit) != 0) {
 			
 			decision_lvl = TRAVERSE_DUMP;
 		
 		// We have no strategically best buyer/seller but we are AT an 
 		// electricity depot so it's best to buy some electricity
 		} else if (b->fruit == NULL && strcmp("Electricity", 
-		    b->location->fruit) == 0 && !battery_lvl(b)) {
+		           b->location->fruit) == 0 && !battery_lvl(b)) {
 			
 			decision_lvl = RECHARGING;
 		
 		// We have no strategically best buyer/seller and bot is not at an 
 		// electricity depot however we are NEAR one so move the bot there
 		} else if (b->fruit == NULL && strcmp("Electricity", 
-		    b->location->fruit) != 0 && !battery_lvl(b)) {
+		           b->location->fruit) != 0 && !battery_lvl(b)) {
 			
 			decision_lvl = TRAVERSE_CHARGE;
 		
@@ -336,10 +337,10 @@ void print_move(struct bot *b) {
 			
 			var_a = (var_a + 1);
 		}
-
+		
 		int traverse = minimum_displacement(b->location, closest_fruit_dump);
 		int traverse_direction = move_direction(b->location, 
-		    closest_fruit_dump);
+		                         closest_fruit_dump);
 		
 		printf("Move %d\n", traverse * traverse_direction);
 	
@@ -423,9 +424,9 @@ void print_move(struct bot *b) {
 // which actions my bot took within the test world and the referee program.
 
 void run_unit_tests(void) {
-    // PUT YOUR UNIT TESTS HERE
-    // This is a difficult assignment to write unit tests for,
-    // but make sure you describe your testing strategy above.
+	// PUT YOUR UNIT TESTS HERE
+	// This is a difficult assignment to write unit tests for,
+	// but make sure you describe your testing strategy above.
 }
 
 // OWN FUNCTIONS START HERE:
@@ -448,71 +449,71 @@ int within(char *variable, char *variable_arr[], int array_length) {
 
 // Obtains the various locations of the fruits
 int fruit_location(struct bot *b, char *fruit, int decision, 
-    struct location *loc[]) {
-    struct location *current = b->location;
-    int traversed_world = FALSE;
-    int var_y = 0;
+	struct location *loc[]) {
+	struct location *current = b->location;
+	int traversed_world = FALSE;
+	int var_y = 0;
 	
-    while(current != NULL && !traversed_world) {
-        if (curr_location_decision(current) == decision || decision == ANY) {
-            if (strcmp(current->fruit, fruit) == 0 && current->quantity > 0) {
+	while(current != NULL && !traversed_world) {
+		if (curr_location_decision(current) == decision || decision == ANY) {
+			if (strcmp(current->fruit, fruit) == 0 && current->quantity > 0) {
 				
-                loc[var_y] = current;
-                var_y = (var_y + 1);
-            }
-        }
+				loc[var_y] = current;
+				var_y = (var_y + 1);
+			}
+		}
 		
-        current = current->east;
+		current = current->east;
 		
 		if (same_location(current, b->location)) {
 			
 			traversed_world = TRUE;
 		}
-    }
+	}
 	
-    return var_y;
+	return var_y;
 }
 
 // Gives the length of the array containing the various buyer locations
 int fruit_buyers(struct bot *b, char *fruit, struct location *loc[]) {
 	
-    return fruit_location(b, fruit, BUY, loc);
+	return fruit_location(b, fruit, BUY, loc);
 }
 
 // Gives the length of the array containing the various seller locations
 int fruit_sellers(struct bot *b, char *fruit, struct location *loc[]) {
 	
-    return fruit_location(b, fruit, SELL, loc);
+	return fruit_location(b, fruit, SELL, loc);
 }
 
 // Gives the length of the array containing the various electricity locations
 int electricity_depots(struct bot *b, struct location *loc[]) {
 	
-    return fruit_sellers(b, "Electricity", loc);
+	return fruit_sellers(b, "Electricity", loc);
 }
 
 // Determine whether the given location will buy or sell fruit/electricity
 int curr_location_decision(struct location *location) {
-    if (location->price < 0) {
+	if (location->price < 0) {
 		
-        return SELL;
+		return SELL;
 	
-    } else if (location->price > 0) {
+	} else if (location->price > 0) {
 		
-        return BUY;
+		return BUY;
 	
-    } else {
+	} else {
 		
-        return 0;
-    }
+		return 0;
+	}
 }
 
 // Determines the distance between any two given locations
 int displacement(struct location *loc_a, struct location *loc_b, int route) {
 	struct location *current = loc_a;
 	int traversed_world = 0;
-    int var_y = 0;
-
+	int var_y = 0;
+	
 	while(current != NULL && !traversed_world) {
 		if (same_location(current, loc_b)) {
 			
@@ -543,33 +544,33 @@ int displacement(struct location *loc_a, struct location *loc_b, int route) {
 
 // Determines the smallest distance to a location
 int minimum_displacement(struct location *loc_a, struct location *loc_b) {
-    int displacement_e = displacement(loc_a, loc_b, EAST);
-    int displacement_w = displacement(loc_a, loc_b, WEST);
-
-    if (displacement_e <= displacement_w) {
+	int displacement_e = displacement(loc_a, loc_b, EAST);
+	int displacement_w = displacement(loc_a, loc_b, WEST);
+	
+	if (displacement_e <= displacement_w) {
 		
-        return displacement_e;
+		return displacement_e;
 		
-    } else {
+	} else {
 		
-        return displacement_w;
-    }
+		return displacement_w;
+	}
 }
 
 // Determines the direction which the bot should take to travel the smallest 
 // distance
 int move_direction(struct location *loc_a, struct location *loc_b) {
-    int displacement_e = displacement(loc_a, loc_b, EAST);
-    int displacement_w = displacement(loc_a, loc_b, WEST);
+	int displacement_e = displacement(loc_a, loc_b, EAST);
+	int displacement_w = displacement(loc_a, loc_b, WEST);
 	
-    if (displacement_e <= displacement_w) {
+	if (displacement_e <= displacement_w) {
 		
-        return EAST;
+		return EAST;
 		
-    } else {
+	} else {
 		
-        return WEST;
-    }
+		return WEST;
+	}
 }
 
 // Determines whether two locations are in fact the same place or not
@@ -578,7 +579,7 @@ int same_location(struct location *loc_a, struct location *loc_b) {
 		
 		return TRUE;
 	}
-
+	
 	return FALSE;
 }
 
@@ -594,12 +595,6 @@ int battery_lvl(struct bot *b) {
 	}
 }
 
-// Calculates the current battery percentage of the bot
-double current_battery_quota(struct bot *b) {
-	
-	return (((b->battery_level * 1.0) / b->battery_capacity) * 100);
-}
-
 // Checks whether the bot can move to a location with it's current battery life
 int can_reach(struct bot *b, struct location *location) {
 	if (minimum_displacement(b->location, location) <= b->battery_level) {
@@ -613,7 +608,7 @@ int can_reach(struct bot *b, struct location *location) {
 }
 
 int can_reach_with_curr_battery(int curr_charge, struct location *start, 
-    struct location *destination) {
+	struct location *destination) {
 	if (minimum_displacement(start, destination) <= curr_charge) {
 		
 		return TRUE;
@@ -653,8 +648,8 @@ int can_reach_location_with_top_up(struct bot *b, struct location *location) {
 			var_a = (var_a + 1);
 		}
 		
-		int future_charge_lvl = b->battery_level - 
-		    minimum_displacement(b->location, location);
+		int future_charge_lvl = (b->battery_level - 
+		                         minimum_displacement(b->location, location));
 		
 		if (can_reach_with_curr_battery(future_charge_lvl, location, 
 		    profitable_depot)) {
@@ -662,7 +657,7 @@ int can_reach_location_with_top_up(struct bot *b, struct location *location) {
 			return TRUE;
 		}
 	}
-
+	
 	return FALSE;
 }
 
@@ -670,7 +665,7 @@ int can_reach_location_with_top_up(struct bot *b, struct location *location) {
 int max_income(struct bot *b, struct location *buyer, struct location *seller) {
 	int price = 0;
 	int supply = max_amount(max_amount(seller->quantity, b->maximum_fruit_kg), 
-	    buyer->quantity); 
+	             buyer->quantity); 
 	
 	price += (abs(seller->price) * supply);
 	
@@ -690,7 +685,7 @@ int depot_price(struct bot *b, struct location *vendor) {
 	int future_battery_lvl = (curr_battery - price_to_traverse);
 	int electricity_needed = (b->battery_capacity - future_battery_lvl);
 	int supply = max_amount(largest_amount_for_bot(b, vendor), 
-	    electricity_needed);
+	             electricity_needed);
 	
 	price += (abs(vendor->price) * supply);
 	
@@ -698,19 +693,19 @@ int depot_price(struct bot *b, struct location *vendor) {
 }
 
 int max_amount(int accessible, int needed) {
-    int conclusion = needed;
+	int conclusion = needed;
 	
-    if (accessible < needed) {
+	if (accessible < needed) {
 		
-        conclusion = accessible;
-    }
+		conclusion = accessible;
+	}
 	
-    return conclusion;
+	return conclusion;
 }
 
 int largest_amount_for_bot(struct bot *b, struct location *location) {
 	int largest_amt_manageable = max_amount(location->quantity * 
-	    abs(location->price), b->cash);
+	                             abs(location->price), b->cash);
 	
 	return (largest_amt_manageable / abs(location->price));
 }
@@ -721,18 +716,24 @@ int free_room(struct bot *b) {
 }
 
 int move_charge(struct bot *b, struct location *location) {
-    struct location *elec_depot[MAX_LOCATIONS];
-    int distance_till_refuel = electricity_depots(b, elec_depot);
-    int var_y = 0;
-    int full_cost = 0;
-
-    while(var_y < distance_till_refuel) {
-        full_cost += abs((elec_depot[var_y])->price);
-		
-        var_y = (var_y + 1);
-    }
+	struct location *elec_depot[MAX_LOCATIONS];
+	int distance_till_refuel = electricity_depots(b, elec_depot);
+	int var_y = 0;
+	int full_cost = 0;
 	
-    int mean_refuel_cost = (full_cost / var_y);
+	while(var_y < distance_till_refuel) {
+		full_cost += abs((elec_depot[var_y])->price);
+		
+		var_y = (var_y + 1);
+	}
+	
+	int mean_refuel_cost = (full_cost / var_y);
 	
 	return (mean_refuel_cost * 1 * minimum_displacement(b->location, location));
+}
+
+// Calculates the current battery percentage of the bot
+double current_battery_quota(struct bot *b) {
+	
+	return (((b->battery_level * 1.0) / b->battery_capacity) * MAX);
 }
